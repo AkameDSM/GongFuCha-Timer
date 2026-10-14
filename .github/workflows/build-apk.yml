@@ -23,14 +23,26 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Wrap HTML into Native Android Project (Capacitor)
+      - name: Setup Project & Capacitor
         run: |
           mkdir -p www
           cp index.html manifest.json sw.js www/
+          
+          # Crea il package.json e installa Capacitor
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Gong Fu Cha" "com.gongfucha.timer" --web-dir www
+          
+          # Scrive direttamente il file di configurazione senza passaggi interattivi
+          echo '{
+            "appId": "com.gongfucha.timer",
+            "appName": "Gong Fu Cha",
+            "webDir": "www",
+            "bundledWebRuntime": false
+          }' > capacitor.config.json
+
+          # Aggiunge e sincronizza la piattaforma Android
           npx cap add android
+          npx cap sync android
 
       - name: Compile Android APK
         run: |
