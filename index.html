@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0e1712">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.json">
+  <title>Gong Fu Cha Timer</title>
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #0e1712;
+      --surface: #16241c;
+      --surface-elevated: #1f3328;
+      --text: #edf5f0;
+      --muted: #8aa393;
+      --accent: #4ead74;
+      --accent-soft: rgba(78, 173, 116, 0.16);
+      --border: #263d30;
+      --btn-text: #0b140f;
+      --porcelain-body: #dce8e0;
+      --porcelain-shade: #b8ccc0;
+      --porcelain-rim: #f2f7f4;
+      --saucer-fill: #294234;
+      --interior-well: #1e2e24;
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f3f7f4;
+      --surface: #ffffff;
+      --surface-elevated: #e6efe9;
+      --text: #182b20;
+      --muted: #5e7868;
+      --accent: #2d6a4f;
+      --accent-soft: rgba(45, 106, 79, 0.12);
+      --border: #d5e3d9;
+      --btn-text: #ffffff;
+      --porcelain-body: #ffffff;
+      --porcelain-shade: #dce8e0;
+      --porcelain-rim: #f7faf8;
+      --saucer-fill: #bdd1c5;
+      --interior-well: #e3ede6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 440px;
+      min-height: 100dvh;
+      padding: 16px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
+
+    .icon-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 11px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+      padding-top: 12px;
+    }
+
+    .screen.active { display: flex; }
+
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .preset-row::-webkit-scrollbar { display: none; }
+
+    .preset-pill {
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .preset-pill.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-value {
+      font-size: 1.18rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .step-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-elevated);
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-btn:active { transform: scale(0.95); }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+    }
+
+    .chip {
+      padding: 8px 4px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .chip.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--btn-text);
+      font-weight: 700;
+    }
+
+    .setup-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .text-link {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      padding: 4px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      border: none;
+      background: var(--accent);
+      color: var(--btn-text);
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px var(--accent-soft);
+    }
+
+    .infusion-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0 10px;
+      scrollbar-width: none;
+    }
+    .infusion-strip::-webkit-scrollbar { display: none; }
+
+    .inf-tab {
+      min-width: 78px;
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      flex-shrink: 0;
+    }
+
+    .inf-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--btn-text);
+    }
+
+    .inf-tab.done { opacity: 0.45; }
+
+    .inf-tab-ord {
+      font-size: 0.82rem;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .inf-tab-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .inf-tab-divider {
+      height: 1px;
+      background: currentColor;
+      opacity: 0.22;
+      margin: 5px 6px;
+    }
+
+    .inf-tab-time {
+      font-size: 0.92rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sub-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 2px;
+    }
+
+    .sub-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ceremony-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: auto 0;
+    }
+
+    .countdown-num {
+      font-size: 4rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .countdown-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .gaiwan-stage {
+      width: 290px;
+      height: 235px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gaiwan-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .gaiwan-lid {
+      transform-origin: 140px 98px;
+      transition: transform 0.65s cubic-bezier(0.34, 1.45, 0.64, 1);
+    }
+
+    .gaiwan-stage.open .gaiwan-lid {
+      transform: translate(58px, 26px) rotate(38deg);
+    }
+
+    .tea-interior-contents {
+      opacity: 0;
+      transition: opacity 0.45s ease 0.15s;
+    }
+
+    .gaiwan-stage.open .tea-interior-contents { opacity: 1; }
+
+    .tea-leaves-group {
+      transform-origin: 140px 102px;
+      transition: transform 0.8s ease-out;
+      transform: scale(0.85);
+    }
+
+    .gaiwan-stage.open .tea-leaves-group { transform: scale(1); }
+
+    .steam-group {
+      opacity: 0;
+      transition: opacity 0.5s ease 0.25s;
+    }
+
+    .gaiwan-stage.open .steam-group { opacity: 0.75; }
+
+    .steam-path {
+      animation: riseSteam 2.4s infinite ease-in-out;
+    }
+    .steam-path:nth-child(2) { animation-delay: 0.6s; }
+    .steam-path:nth-child(3) { animation-delay: 1.2s; }
+
+    @keyframes riseSteam {
+      0% { transform: translateY(4px); opacity: 0.2; }
+      50% { transform: translateY(-6px); opacity: 0.85; }
+      100% { transform: translateY(-14px); opacity: 0; }
+    }
+
+    .timer-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding-top: 8px;
+    }
+
+    .main-btn {
+      min-width: 175px;
+      padding: 15px 24px;
+      border-radius: 14px;
+      border: 1.5px solid var(--accent);
+      background: var(--surface);
+      color: var(--accent);
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .main-btn.primary {
+      background: var(--accent);
+      color: var(--btn-text);
+    }
+
+    .mini-ctrl {
+      padding: 15px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="topbar">
+      <div class="topbar-title">Gong Fu Cha</div>
+      <div style="display:flex; gap:8px;">
+        <button class="icon-btn" id="soundToggleBtn" onclick="toggleSound()">🔔 Sound</button>
+        <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()">☀️ Light</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: SETTINGS -->
+    <div id="setupScreen" class="screen active">
+      <div>
+        <div class="preset-row">
+          <button class="preset-pill active" onclick="applyPreset('custom', 15, 5, 5)">Standard (5)</button>
+          <button class="preset-pill" onclick="applyPreset('oolong', 15, 5, 8)">Oolong</button>
+          <button class="preset-pill" onclick="applyPreset('green', 10, 5, 5)">Green / White</button>
+          <button class="preset-pill" onclick="applyPreset('puerh', 10, 5, 10)">Pu-erh</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">First infusion time</span>
+            <span class="card-value" id="baseVal">15 sec</span>
+          </div>
+          <div class="slider-wrap">
+            <button class="step-btn" onclick="stepParam('base', -1)">−</button>
+            <input type="range" id="baseSlider" min="5" max="120" value="15" oninput="updateParam('base', this.value)">
+            <button class="step-btn" onclick="stepParam('base', 1)">+</button>
+          </div>
+          <div class="chip-grid" id="baseChips">
+            <button class="chip" onclick="updateParam('base', 5)">5s</button>
+            <button class="chip" onclick="updateParam('base', 10)">10s</button>
+            <button class="chip selected" onclick="updateParam('base', 15)">15s</button>
+            <button class="chip" onclick="updateParam('base', 30)">30s</button>
+            <button class="chip" onclick="updateParam('base', 60)">1m</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Each next infusion time</span>
+            <span class="card-value" id="incVal">+5 sec</span>
+          </div>
+          <div class="slider-wrap">
+            <button class="step-btn" onclick="stepParam('inc', -1)">−</button>
+            <input type="range" id="incSlider" min="0" max="60" value="5" oninput="updateParam('inc', this.value)">
+            <button class="step-btn" onclick="stepParam('inc', 1)">+</button>
+          </div>
+          <div class="chip-grid" id="incChips">
+            <button class="chip selected" onclick="updateParam('inc', 5)">5s</button>
+            <button class="chip" onclick="updateParam('inc', 10)">10s</button>
+            <button class="chip" onclick="updateParam('inc', 15)">15s</button>
+            <button class="chip" onclick="updateParam('inc', 30)">30s</button>
+            <button class="chip" onclick="updateParam('inc', 60)">1m</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Number of infusions</span>
+            <span class="card-value" id="countVal">5</span>
+          </div>
+          <div class="slider-wrap">
+            <button class="step-btn" onclick="stepParam('count', -1)">−</button>
+            <input type="range" id="countSlider" min="1" max="20" value="5" oninput="updateParam('count', this.value)">
+            <button class="step-btn" onclick="stepParam('count', 1)">+</button>
+          </div>
+          <div class="chip-grid" id="countChips">
+            <button class="chip" onclick="updateParam('count', 3)">3</button>
+            <button class="chip selected" onclick="updateParam('count', 5)">5</button>
+            <button class="chip" onclick="updateParam('count', 8)">8</button>
+            <button class="chip" onclick="updateParam('count', 10)">10</button>
+            <button class="chip" onclick="updateParam('count', 12)">12</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-footer">
+        <button class="text-link" onclick="restoreDefaults()">Restore defaults (5 infusions)</button>
+        <button class="primary-btn" onclick="openBrewScreen()">Proceed to brewing</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: BREWING TIMER -->
+    <div id="brewScreen" class="screen">
+      <div>
+        <div class="infusion-strip" id="infusionStrip"></div>
+        <div class="sub-actions">
+          <button class="sub-btn" onclick="restartCeremony()">↻ Restart ceremony</button>
+          <button class="sub-btn" onclick="openSetupScreen()">⚙ Settings</button>
+        </div>
+      </div>
+
+      <div class="ceremony-center">
+        <div class="countdown-num" id="countdownNum">15</div>
+        <div class="countdown-label" id="countdownStatus">1st Infusion Ready</div>
+
+        <div class="gaiwan-stage" id="gaiwanStage">
+          <svg class="gaiwan-svg" viewBox="0 0 280 230">
+            <defs>
+              <clipPath id="bowlOpeningClip">
+                <ellipse cx="140" cy="100" rx="68" ry="20" />
+              </clipPath>
+              <clipPath id="bowlBodyClip">
+                <path d="M 68 100 Q 82 182 112 192 L 168 192 Q 198 182 212 100 Z" />
+              </clipPath>
+              <radialGradient id="teaLiquorGrad" cx="50%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="#80b918" stop-opacity="0.85" />
+                <stop offset="65%" stop-color="#55a630" stop-opacity="0.92" />
+                <stop offset="100%" stop-color="#2b9348" stop-opacity="0.98" />
+              </radialGradient>
+            </defs>
+
+            <!-- Saucer -->
+            <ellipse cx="140" cy="198" rx="84" ry="18" fill="var(--saucer-fill)" stroke="var(--accent)" stroke-width="2" />
+            <ellipse cx="140" cy="195" rx="52" ry="9" fill="none" stroke="var(--accent)" stroke-width="1.2" opacity="0.5" />
+
+            <!-- Gaiwan Bowl Body -->
+            <path d="M 68 100 Q 82 182 112 192 L 168 192 Q 198 182 212 100 Z"
+                  fill="var(--porcelain-body)" stroke="var(--accent)" stroke-width="2.5" />
+
+            <!-- Subtle internal brew progress -->
+            <g clip-path="url(#bowlBodyClip)">
+              <rect id="brewFillRect" x="60" y="192" width="160" height="95"
+                    fill="var(--accent)" opacity="0.25" />
+            </g>
+
+            <!-- Bowl Top Opening -->
+            <ellipse cx="140" cy="100" rx="70" ry="21" fill="var(--interior-well)" stroke="var(--accent)" stroke-width="2.2" />
+
+            <!-- Brewed Tea & Leaves Inside -->
+            <g class="tea-interior-contents" clip-path="url(#bowlOpeningClip)">
+              <ellipse cx="140" cy="103" rx="65" ry="18" fill="url(#teaLiquorGrad)" />
+              <ellipse cx="140" cy="103" rx="54" ry="13" fill="none" stroke="#d9ed92" stroke-width="0.8" opacity="0.5" />
+              <g class="tea-leaves-group">
+                <path d="M 105 104 Q 118 92 132 101 Q 118 112 105 104 Z" fill="#1b4332" />
+                <path d="M 107 104 Q 118 99 130 101" fill="none" stroke="#52b788" stroke-width="0.9" />
+                <path d="M 136 96 Q 152 88 166 99 Q 150 108 136 96 Z" fill="#2d6a4f" />
+                <path d="M 138 96 Q 151 95 163 99" fill="none" stroke="#74c69d" stroke-width="0.9" />
+                <path d="M 122 108 Q 140 99 155 110 Q 138 118 122 108 Z" fill="#1b4332" />
+                <path d="M 124 108 Q 139 106 152 110" fill="none" stroke="#52b788" stroke-width="0.9" />
+                <path d="M 155 105 Q 168 98 178 106 Q 166 113 155 105 Z" fill="#40916c" />
+                <path d="M 92 100 Q 104 94 114 103 Q 102 109 92 100 Z" fill="#2d6a4f" />
+              </g>
+            </g>
+
+            <!-- Front Lip Highlight -->
+            <path d="M 70 100 A 70 21 0 0 0 210 100" fill="none" stroke="var(--accent)" stroke-width="2.5" />
+
+            <!-- Steam Wisps -->
+            <g class="steam-group" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round">
+              <path class="steam-path" d="M 118 86 Q 112 72 120 60 T 116 38" />
+              <path class="steam-path" d="M 140 82 Q 146 68 138 54 T 142 32" />
+              <path class="steam-path" d="M 160 88 Q 166 74 158 62 T 162 42" />
+            </g>
+
+            <!-- Gaiwan Lid -->
+            <g class="gaiwan-lid">
+              <path d="M 124 54 L 156 54 L 150 67 L 130 67 Z"
+                    fill="var(--porcelain-shade)" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round" />
+              <ellipse cx="140" cy="54" rx="16" ry="4.5"
+                       fill="var(--porcelain-rim)" stroke="var(--accent)" stroke-width="2" />
+              <path d="M 74 98 Q 140 60 206 98 Z"
+                    fill="var(--porcelain-body)" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" />
+              <ellipse cx="140" cy="98" rx="66" ry="16"
+                       fill="var(--porcelain-rim)" stroke="var(--accent)" stroke-width="2.2" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="timer-controls">
+        <button class="mini-ctrl" onclick="adjustLiveTime(-5)">−5s</button>
+        <button class="main-btn primary" id="mainActionBtn" onclick="handleMainAction()">▶ Start 1st</button>
+        <button class="mini-ctrl" onclick="adjustLiveTime(5)">+5s</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chipMap = {
+      base: [5, 10, 15, 30, 60],
+      inc: [5, 10, 15, 30, 60],
+      count: [3, 5, 8, 10, 12]
+    };
+
+    let state = {
+      base: 15,
+      inc: 5,
+      count: 5,
+      currentIdx: 0,
+      totalSec: 15,
+      remainingMs: 15000,
+      running: false,
+      steepFinished: false,
+      endTime: null,
+      rafId: null,
+      sound: true,
+      wakeLock: null
+    };
+
+    function toOrdinal(n) {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const saved = JSON.parse(localStorage.getItem('gongfu_green_prefs') || '{}');
+      updateParam('base', saved.base || 15, false);
+      updateParam('inc', saved.inc !== undefined ? saved.inc : 5, false);
+      updateParam('count', saved.count || 5, false);
+      if (saved.theme) setTheme(saved.theme);
+      if (saved.sound !== undefined) {
+        state.sound = saved.sound;
+        document.getElementById('soundToggleBtn').textContent = state.sound ? '🔔 Sound' : '🔕 Mute';
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      }
+    });
+
+    function savePrefs() {
+      localStorage.setItem('gongfu_green_prefs', JSON.stringify({
+        base: state.base,
+        inc: state.inc,
+        count: state.count,
+        theme: document.documentElement.getAttribute('data-theme'),
+        sound: state.sound
+      }));
+    }
+
+    function formatCardTime(sec) {
+      if (sec < 60) return sec + 's';
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return s > 0 ? (m + 'm ' + s + 's') : (m + 'm');
+    }
+
+    function formatBigClock(ms) {
+      const sec = Math.ceil(ms / 1000);
+      if (sec < 60) return String(sec);
+      const m = Math.floor(sec / 60), s = String(sec % 60).padStart(2, '0');
+      return m + ':' + s;
+    }
+
+    function updateParam(key, val, save) {
+      if (save === undefined) save = true;
+      val = Math.max(key === 'inc' ? 0 : 1, parseInt(val, 10));
+      state[key] = val;
+      document.getElementById(key + 'Slider').value = val;
+
+      if (key === 'base') document.getElementById('baseVal').textContent = val >= 60 ? formatCardTime(val) : (val + ' sec');
+      if (key === 'inc') document.getElementById('incVal').textContent = '+' + (val >= 60 ? formatCardTime(val) : (val + ' sec'));
+      if (key === 'count') document.getElementById('countVal').textContent = String(val);
+
+      const chips = document.getElementById(key + 'Chips').children;
+      chipMap[key].forEach(function(presetVal, idx) {
+        chips[idx].classList.toggle('selected', presetVal === val);
+      });
+      if (save) savePrefs();
+    }
+
+    function stepParam(key, delta) {
+      updateParam(key, state[key] + delta);
+    }
+
+    function applyPreset(id, b, i, c) {
+      updateParam('base', b);
+      updateParam('inc', i);
+      updateParam('count', c);
+      document.querySelectorAll('.preset-pill').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('onclick').indexOf("'" + id + "'") !== -1);
+      });
+    }
+
+    function restoreDefaults() {
+      applyPreset('custom', 15, 5, 5);
+    }
+
+    function openBrewScreen() {
+      document.getElementById('setupScreen').classList.remove('active');
+      document.getElementById('brewScreen').classList.add('active');
+      loadInfusion(0);
+    }
+
+    function openSetupScreen() {
+      pauseTimer();
+      document.getElementById('brewScreen').classList.remove('active');
+      document.getElementById('setupScreen').classList.add('active');
+    }
+
+    function renderInfusionStrip() {
+      const strip = document.getElementById('infusionStrip');
+      strip.innerHTML = '';
+      for (let i = 0; i < state.count; i++) {
+        const sec = state.base + i * state.inc;
+        const tab = document.createElement('div');
+        tab.className = 'inf-tab ' + (i === state.currentIdx ? 'active' : (i < state.currentIdx ? 'done' : ''));
+        tab.onclick = (function(index) {
+          return function() { pauseTimer(); loadInfusion(index); };
+        })(i);
+        tab.innerHTML =
+          '<div class="inf-tab-ord">' + toOrdinal(i + 1) + '</div>' +
+          '<div class="inf-tab-label">Infusion</div>' +
+          '<div class="inf-tab-divider"></div>' +
+          '<div class="inf-tab-time">' + formatCardTime(sec) + '</div>';
+        strip.appendChild(tab);
+      }
+      const activeEl = strip.children[state.currentIdx];
+      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+
+    function setGaiwanOpen(isOpen) {
+      document.getElementById('gaiwanStage').classList.toggle('open', isOpen);
+    }
+
+    function loadInfusion(idx) {
+      state.currentIdx = idx;
+      state.totalSec = state.base + idx * state.inc;
+      state.remainingMs = state.totalSec * 1000;
+      state.steepFinished = false;
+
+      setGaiwanOpen(false);
+      updateVisuals();
+      renderInfusionStrip();
+
+      const ord = toOrdinal(idx + 1);
+      document.getElementById('countdownStatus').textContent = ord + ' Infusion Ready';
+      const btn = document.getElementById('mainActionBtn');
+      btn.textContent = '▶ Start ' + ord;
+      btn.classList.add('primary');
+    }
+
+    function updateVisuals() {
+      document.getElementById('countdownNum').textContent = formatBigClock(state.remainingMs);
+      const progress = 1 - Math.max(0, Math.min(1, state.remainingMs / (state.totalSec * 1000)));
+      const fillHeight = progress * 90;
+      const fillRect = document.getElementById('brewFillRect');
+      fillRect.setAttribute('y', 192 - fillHeight);
+    }
+
+    function handleMainAction() {
+      if (state.steepFinished) {
+        if (state.currentIdx + 1 < state.count) {
+          loadInfusion(state.currentIdx + 1);
+          startTimer();
+        } else {
+          restartCeremony();
+        }
+        return;
+      }
+      state.running ? pauseTimer() : startTimer();
+    }
+
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try { state.wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+      }
+    }
+
+    function startTimer() {
+      if (state.remainingMs <= 0) state.remainingMs = state.totalSec * 1000;
+      state.running = true;
+      state.steepFinished = false;
+      setGaiwanOpen(false);
+      state.endTime = performance.now() + state.remainingMs;
+      requestWakeLock();
+
+      const btn = document.getElementById('mainActionBtn');
+      btn.textContent = '❚❚ Pause';
+      btn.classList.remove('primary');
+      document.getElementById('countdownStatus').textContent = 'Steeping ' + toOrdinal(state.currentIdx + 1) + ' Infusion...';
+
+      function tick(now) {
+        if (!state.running) return;
+        state.remainingMs = Math.max(0, state.endTime - now);
+        updateVisuals();
+
+        if (state.remainingMs <= 0) {
+          completeSteep();
+        } else {
+          state.rafId = requestAnimationFrame(tick);
+        }
+      }
+      state.rafId = requestAnimationFrame(tick);
+    }
+
+    function pauseTimer() {
+      state.running = false;
+      cancelAnimationFrame(state.rafId);
+      if (state.wakeLock) { state.wakeLock.release().catch(function(){}); state.wakeLock = null; }
+      if (!state.steepFinished) {
+        const btn = document.getElementById('mainActionBtn');
+        btn.textContent = '▶ Resume';
+        btn.classList.add('primary');
+        document.getElementById('countdownStatus').textContent = 'Paused';
+      }
+    }
+
+    function adjustLiveTime(deltaSec) {
+      if (state.steepFinished) return;
+      const deltaMs = deltaSec * 1000;
+      state.totalSec = Math.max(1, state.totalSec + deltaSec);
+      state.remainingMs = Math.max(1000, state.remainingMs + deltaMs);
+      if (state.running) state.endTime += deltaMs;
+      updateVisuals();
+    }
+
+    function playZenBell() {
+      if (!state.sound) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [528, 792].forEach(function(freq, idx) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(idx === 0 ? 0.35 : 0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 2.4);
+        });
+      } catch (e) {}
+    }
+
+    function completeSteep() {
+      state.running = false;
+      state.steepFinished = true;
+      state.remainingMs = 0;
+      updateVisuals();
+
+      setGaiwanOpen(true);
+
+      playZenBell();
+      if (navigator.vibrate) navigator.vibrate([250, 120, 350]);
+
+      const btn = document.getElementById('mainActionBtn');
+      btn.classList.add('primary');
+
+      if (state.currentIdx + 1 < state.count) {
+        const nextOrd = toOrdinal(state.currentIdx + 2);
+        document.getElementById('countdownStatus').textContent = toOrdinal(state.currentIdx + 1) + ' Infusion Ready — Pour Tea!';
+        btn.textContent = 'Start ' + nextOrd + ' Infusion →';
+      } else {
+        document.getElementById('countdownStatus').textContent = 'All Infusions Complete 🍵';
+        btn.textContent = '↻ Restart Ceremony';
+      }
+    }
+
+    function restartCeremony() {
+      pauseTimer();
+      loadInfusion(0);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+      savePrefs();
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeToggleBtn').textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    }
+
+    function toggleSound() {
+      state.sound = !state.sound;
+      document.getElementById('soundToggleBtn').textContent = state.sound ? '🔔 Sound' : '🔕 Mute';
+      savePrefs();
+    }
+  </script>
+</body>
+</html>
