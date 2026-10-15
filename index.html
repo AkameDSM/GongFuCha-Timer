@@ -60,7 +60,6 @@
       justify-content: space-between;
     }
 
-    /* Top Bar */
     .topbar {
       display: flex;
       align-items: center;
@@ -97,7 +96,6 @@
 
     .screen.active { display: flex; }
 
-    /* Setup Control Cards */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -183,6 +181,54 @@
       font-weight: 700;
     }
 
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--surface-elevated);
+      border: 1px solid var(--border);
+      transition: .2s;
+      border-radius: 26px;
+    }
+
+    .slider-toggle:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--muted);
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider-toggle {
+      background-color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    input:checked + .slider-toggle:before {
+      transform: translateX(20px);
+      background-color: var(--btn-text);
+    }
+
     .setup-footer {
       display: flex;
       flex-direction: column;
@@ -214,7 +260,6 @@
       box-shadow: 0 4px 16px var(--accent-soft);
     }
 
-    /* Screen 2: Brewing */
     .infusion-strip {
       display: flex;
       gap: 8px;
@@ -285,7 +330,6 @@
       cursor: pointer;
     }
 
-    /* Centerpiece */
     .ceremony-center {
       display: flex;
       flex-direction: column;
@@ -311,7 +355,6 @@
       margin-bottom: 10px;
     }
 
-    /* Animated Stoneware Gaiwan Stage */
     .gaiwan-stage {
       width: 300px;
       height: 245px;
@@ -327,7 +370,6 @@
       overflow: visible;
     }
 
-    /* Fixed Lid Animation: explicit SVG coordinate pivot */
     #gaiwanLidGroup {
       transform-box: view-box;
       transform-origin: 140px 92px;
@@ -338,7 +380,6 @@
       transform: translate(56px, 24px) rotate(34deg);
     }
 
-    /* Tea liquor & leaves inside the open bowl */
     .tea-interior-contents {
       opacity: 0;
       transition: opacity 0.45s ease 0.15s;
@@ -363,14 +404,8 @@
       50% { transform: translateY(-1.5px) rotate(1deg); }
     }
 
-    /* Moving Water Waves inside the cup while steeping */
-    .wave-back {
-      animation: sloshBack 3.6s linear infinite;
-    }
-
-    .wave-front {
-      animation: sloshFront 2.4s linear infinite;
-    }
+    .wave-back { animation: sloshBack 3.6s linear infinite; }
+    .wave-front { animation: sloshFront 2.4s linear infinite; }
 
     @keyframes sloshBack {
       0% { transform: translateX(0px); }
@@ -382,7 +417,6 @@
       100% { transform: translateX(0px); }
     }
 
-    /* Rising steam when open */
     .steam-group {
       opacity: 0;
       transition: opacity 0.5s ease 0.25s;
@@ -390,9 +424,7 @@
 
     .gaiwan-stage.open .steam-group { opacity: 0.65; }
 
-    .steam-path {
-      animation: riseSteam 2.6s infinite ease-in-out;
-    }
+    .steam-path { animation: riseSteam 2.6s infinite ease-in-out; }
     .steam-path:nth-child(2) { animation-delay: 0.7s; }
     .steam-path:nth-child(3) { animation-delay: 1.4s; }
 
@@ -402,7 +434,6 @@
       100% { transform: translateY(-15px); opacity: 0; }
     }
 
-    /* Bottom Controls */
     .timer-controls {
       display: flex;
       align-items: center;
@@ -451,9 +482,31 @@
       </div>
     </div>
 
-    <!-- SCREEN 1: SETTINGS (No top preset pills, opens at 15s / +5s / 4 infusions) -->
+    <!-- SCREEN 1: SETTINGS -->
     <div id="setupScreen" class="screen active">
       <div>
+        <div class="card">
+          <div class="toggle-row">
+            <span class="card-title">Enable optional rinse step (Wash)</span>
+            <label class="switch">
+              <input type="checkbox" id="rinseToggle" onchange="toggleRinse(this.checked)">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card" id="rinseCard" style="display: none;">
+          <div class="card-header">
+            <span class="card-title">Rinse duration</span>
+            <span class="card-value" id="rinseVal">5 sec</span>
+          </div>
+          <div class="slider-wrap">
+            <button class="step-btn" onclick="stepRinse(-1)">−</button>
+            <input type="range" id="rinseSlider" min="2" max="30" value="5" oninput="updateRinse(this.value)">
+            <button class="step-btn" onclick="stepRinse(1)">+</button>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-header">
             <span class="card-title">First infusion time</span>
@@ -502,478 +555,5 @@
             <input type="range" id="countSlider" min="1" max="20" value="4" oninput="updateParam('count', this.value)">
             <button class="step-btn" onclick="stepParam('count', 1)">+</button>
           </div>
-          <div class="chip-grid" id="countChips">
-            <button class="chip" onclick="updateParam('count', 3)">3</button>
-            <button class="chip selected" onclick="updateParam('count', 4)">4</button>
-            <button class="chip" onclick="updateParam('count', 5)">5</button>
-            <button class="chip" onclick="updateParam('count', 8)">8</button>
-            <button class="chip" onclick="updateParam('count', 10)">10</button>
-          </div>
-        </div>
-      </div>
 
-      <div class="setup-footer">
-        <button class="text-link" onclick="restoreDefaults()">Restore defaults</button>
-        <button class="primary-btn" onclick="openBrewScreen()">Proceed to brewing</button>
-      </div>
-    </div>
-
-    <!-- SCREEN 2: BREWING TIMER -->
-    <div id="brewScreen" class="screen">
-      <div>
-        <div class="infusion-strip" id="infusionStrip"></div>
-        <div class="sub-actions">
-          <button class="sub-btn" onclick="restartCeremony()">↻ Restart ceremony</button>
-          <button class="sub-btn" onclick="openSetupScreen()">⚙ Settings</button>
-        </div>
-      </div>
-
-      <div class="ceremony-center">
-        <div class="countdown-num" id="countdownNum">15</div>
-        <div class="countdown-label" id="countdownStatus">1st Infusion Ready</div>
-
-        <!-- ARTISANAL DARK STONEWARE GAIWAN (Modeled after reference photo) -->
-        <div class="gaiwan-stage" id="gaiwanStage">
-          <svg class="gaiwan-svg" viewBox="0 0 280 235">
-            <defs>
-              <!-- Saucer Shading -->
-              <radialGradient id="saucerGrad" cx="42%" cy="40%" r="60%">
-                <stop offset="0%" stop-color="#9ca39e" />
-                <stop offset="55%" stop-color="#5a605d" />
-                <stop offset="90%" stop-color="#333735" />
-                <stop offset="100%" stop-color="#222523" />
-              </radialGradient>
-
-              <!-- Dark Charcoal Stoneware Body with subtle warm glaze highlights -->
-              <linearGradient id="stonewareBodyGrad" x1="15%" y1="10%" x2="88%" y2="90%">
-                <stop offset="0%" stop-color="#575b58" />
-                <stop offset="32%" stop-color="#2e3230" />
-                <stop offset="72%" stop-color="#1b1e1c" />
-                <stop offset="100%" stop-color="#121413" />
-              </linearGradient>
-
-              <!-- Lid Dome Gradient with subtle warm ceramic blush -->
-              <radialGradient id="lidDomeGrad" cx="35%" cy="35%" r="68%">
-                <stop offset="0%" stop-color="#878c89" />
-                <stop offset="40%" stop-color="#434745" />
-                <stop offset="75%" stop-color="#2b2323" />
-                <stop offset="100%" stop-color="#161817" />
-              </radialGradient>
-
-              <!-- Pale Celadon / Ash Rim Glaze -->
-              <linearGradient id="celadonRimGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#b9c2bc" />
-                <stop offset="30%" stop-color="#e3e8e5" />
-                <stop offset="70%" stop-color="#c8d1cb" />
-                <stop offset="100%" stop-color="#8d9690" />
-              </linearGradient>
-
-              <!-- Brewed Tea Liquor Gradient -->
-              <radialGradient id="teaLiquorGrad" cx="50%" cy="50%" r="55%">
-                <stop offset="0%" stop-color="#6b9e78" stop-opacity="0.92" />
-                <stop offset="65%" stop-color="#467553" stop-opacity="0.96" />
-                <stop offset="100%" stop-color="#284731" stop-opacity="1" />
-              </radialGradient>
-
-              <!-- Clip path for the inside opening of the Gaiwan bowl -->
-              <clipPath id="bowlOpeningClip">
-                <ellipse cx="140" cy="95" rx="76" ry="23" />
-              </clipPath>
-
-              <!-- Clip path for rising sloshing water inside bowl body -->
-              <clipPath id="bowlBodyClip">
-                <path d="M 62 96 C 68 148, 86 183, 114 188 Q 140 192, 166 188 C 194 183, 212 148, 218 96 Z" />
-              </clipPath>
-            </defs>
-
-            <!-- 1. Wide Dished Stoneware Saucer -->
-            <ellipse cx="140" cy="184" rx="98" ry="34" fill="url(#saucerGrad)" stroke="#484d4a" stroke-width="1.5" />
-            <!-- Saucer inner shadow & foot ring -->
-            <ellipse cx="143" cy="186" rx="64" ry="20" fill="#171a18" opacity="0.55" />
-            <ellipse cx="140" cy="184" rx="54" ry="15" fill="none" stroke="#757c78" stroke-width="1" opacity="0.35" />
-
-            <!-- 2. Dark Stoneware Gaiwan Bowl Body -->
-            <path d="M 62 96 C 68 148, 86 183, 114 188 Q 140 192, 166 188 C 194 183, 212 148, 218 96 Z"
-                  fill="url(#stonewareBodyGrad)" stroke="#2c302e" stroke-width="1.5" />
-
-            <!-- 3. Moving Sloshing Water Fill Inside Cup (rises smoothly during countdown) -->
-            <g clip-path="url(#bowlBodyClip)">
-              <g id="waterLevelGroup" transform="translate(0, 192)">
-                <!-- Back Sloshing Wave -->
-                <path class="wave-back"
-                      d="M 0 0 Q 35 -7 70 0 T 140 0 T 210 0 T 280 0 T 350 0 T 420 0 L 420 130 L 0 130 Z"
-                      fill="#527961" opacity="0.32" />
-                <!-- Front Sloshing Wave -->
-                <path class="wave-front"
-                      d="M 0 2 Q 35 9 70 2 T 140 2 T 210 2 T 280 2 T 350 2 T 420 2 L 420 130 L 0 130 Z"
-                      fill="#739e82" opacity="0.45" />
-              </g>
-              <!-- Subtle left ceramic highlight -->
-              <path d="M 74 108 C 78 145, 92 172, 112 182" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.08" />
-            </g>
-
-            <!-- 4. Flared Pale Celadon Rim & Dark Interior Well -->
-            <ellipse cx="140" cy="94" rx="84" ry="27" fill="url(#celadonRimGrad)" stroke="#5b635e" stroke-width="1.2" />
-            <ellipse cx="140" cy="95" rx="76" ry="23" fill="#1c211e" />
-
-            <!-- 5. Brewed Tea & Wet Leaves Inside (Revealed when Lid slides open) -->
-            <g class="tea-interior-contents" clip-path="url(#bowlOpeningClip)">
-              <!-- Tea Liquor Surface -->
-              <ellipse cx="140" cy="98" rx="73" ry="21" fill="url(#teaLiquorGrad)" />
-              <ellipse cx="140" cy="98" rx="60" ry="15" fill="none" stroke="#a3c4ad" stroke-width="0.8" opacity="0.4" />
-
-              <!-- Unfurled Tea Leaves Inside -->
-              <g class="tea-leaves-group">
-                <path d="M 102 99 Q 116 87 131 96 Q 116 107 102 99 Z" fill="#1b3b28" />
-                <path d="M 104 99 Q 116 94 129 96" fill="none" stroke="#6b9e78" stroke-width="0.9" />
-
-                <path d="M 135 91 Q 152 83 167 94 Q 150 103 135 91 Z" fill="#274f38" />
-                <path d="M 137 91 Q 151 90 164 94" fill="none" stroke="#84b593" stroke-width="0.9" />
-
-                <path d="M 120 104 Q 139 95 155 106 Q 137 114 120 104 Z" fill="#163021" />
-                <path d="M 122 104 Q 138 102 152 106" fill="none" stroke="#6b9e78" stroke-width="0.9" />
-
-                <path d="M 154 100 Q 168 93 179 101 Q 166 108 154 100 Z" fill="#356648" />
-                <path d="M 89 95 Q 102 89 112 98 Q 100 104 89 95 Z" fill="#274f38" />
-              </g>
-            </g>
-
-            <!-- Front Lip Highlight of the Flared Rim (Drawn over interior for depth) -->
-            <path d="M 56 94 A 84 27 0 0 0 224 94" fill="none" stroke="#e3e8e5" stroke-width="2.4" opacity="0.9" />
-
-            <!-- 6. Rising Steam Wisps -->
-            <g class="steam-group" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round">
-              <path class="steam-path" d="M 116 82 Q 110 68 118 56 T 114 34" />
-              <path class="steam-path" d="M 140 78 Q 146 64 138 50 T 142 28" />
-              <path class="steam-path" d="M 162 84 Q 168 70 160 58 T 164 38" />
-            </g>
-
-            <!-- 7. Artisanal Stoneware Gaiwan Lid (Unified group, no detached floating parts) -->
-            <g id="gaiwanLidGroup">
-              <!-- Lid Dome Shadow inside Rim -->
-              <ellipse cx="140" cy="95" rx="70" ry="20" fill="#0d0f0e" opacity="0.55" />
-
-              <!-- Main Lid Dome -->
-              <path d="M 72 93 C 76 62, 110 52, 140 52 C 170 52, 204 62, 208 93 C 190 112, 90 112, 72 93 Z"
-                    fill="url(#lidDomeGrad)" stroke="#5b635e" stroke-width="1.3" />
-
-              <!-- Lid Bottom Rim Highlight -->
-              <path d="M 72 93 C 92 111, 188 111, 208 93" fill="none" stroke="#c8d1cb" stroke-width="1.8" opacity="0.75" />
-
-              <!-- Shadow under the Cylindrical Knob -->
-              <ellipse cx="142" cy="56" rx="25" ry="9" fill="#0f1210" opacity="0.65" />
-
-              <!-- Thick Cylindrical Knob Body (Ribbed stoneware texture) -->
-              <path d="M 117 41 L 119 54 C 120 60, 160 60, 161 54 L 163 41 Z"
-                    fill="#383c3a" stroke="#7d8580" stroke-width="1.2" />
-              <!-- Subtle vertical ribs on knob like the watercolor reference -->
-              <path d="M 125 43 L 126 55 M 132 44 L 132 57 M 140 44 L 140 57 M 148 44 L 148 57 M 155 43 L 154 55"
-                    stroke="#222523" stroke-width="1.2" opacity="0.6" />
-
-              <!-- Cylindrical Knob Top Rim & sunken center -->
-              <ellipse cx="140" cy="41" rx="23" ry="8.5" fill="#9ea6a1" stroke="#484d4a" stroke-width="1.2" />
-              <ellipse cx="140" cy="41" rx="17" ry="5.5" fill="#252927" stroke="#c8d1cb" stroke-width="0.8" />
-              <!-- Glaze highlight spot on knob -->
-              <ellipse cx="146" cy="42" rx="4.5" ry="1.6" fill="#dce3de" opacity="0.65" />
-            </g>
-          </svg>
-        </div>
-      </div>
-
-      <div class="timer-controls">
-        <button class="mini-ctrl" onclick="adjustLiveTime(-5)">−5s</button>
-        <button class="main-btn primary" id="mainActionBtn" onclick="handleMainAction()">▶ Start 1st</button>
-        <button class="mini-ctrl" onclick="adjustLiveTime(5)">+5s</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const chipMap = {
-      base: [5, 10, 15, 30, 60],
-      inc: [5, 10, 15, 30, 60],
-      count: [3, 4, 5, 8, 10]
-    };
-
-    let state = {
-      base: 15,
-      inc: 5,
-      count: 4, // Opens with 15s, +5s, and 4 infusions by default
-      currentIdx: 0,
-      totalSec: 15,
-      remainingMs: 15000,
-      running: false,
-      steepFinished: false,
-      endTime: null,
-      rafId: null,
-      sound: true,
-      wakeLock: null
-    };
-
-    function toOrdinal(n) {
-      const s = ["th", "st", "nd", "rd"];
-      const v = n % 100;
-      return n + (s[(v - 20) % 10] || s[v] || s[0]);
-    }
-
-    window.addEventListener('DOMContentLoaded', function() {
-      const saved = JSON.parse(localStorage.getItem('gongfu_sage_v2') || '{}');
-      updateParam('base', saved.base || 15, false);
-      updateParam('inc', saved.inc !== undefined ? saved.inc : 5, false);
-      updateParam('count', saved.count || 4, false);
-      if (saved.theme) setTheme(saved.theme);
-      if (saved.sound !== undefined) {
-        state.sound = saved.sound;
-        document.getElementById('soundToggleBtn').textContent = state.sound ? '🔔 Sound' : '🔕 Mute';
-      }
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(function(){});
-      }
-    });
-
-    function savePrefs() {
-      localStorage.setItem('gongfu_sage_v2', JSON.stringify({
-        base: state.base,
-        inc: state.inc,
-        count: state.count,
-        theme: document.documentElement.getAttribute('data-theme'),
-        sound: state.sound
-      }));
-    }
-
-    function formatCardTime(sec) {
-      if (sec < 60) return sec + 's';
-      const m = Math.floor(sec / 60), s = sec % 60;
-      return s > 0 ? (m + 'm ' + s + 's') : (m + 'm');
-    }
-
-    function formatBigClock(ms) {
-      const sec = Math.ceil(ms / 1000);
-      if (sec < 60) return String(sec);
-      const m = Math.floor(sec / 60), s = String(sec % 60).padStart(2, '0');
-      return m + ':' + s;
-    }
-
-    function updateParam(key, val, save) {
-      if (save === undefined) save = true;
-      val = Math.max(key === 'inc' ? 0 : 1, parseInt(val, 10));
-      state[key] = val;
-      document.getElementById(key + 'Slider').value = val;
-
-      if (key === 'base') document.getElementById('baseVal').textContent = val >= 60 ? formatCardTime(val) : (val + ' sec');
-      if (key === 'inc') document.getElementById('incVal').textContent = '+' + (val >= 60 ? formatCardTime(val) : (val + ' sec'));
-      if (key === 'count') document.getElementById('countVal').textContent = String(val);
-
-      const chips = document.getElementById(key + 'Chips').children;
-      chipMap[key].forEach(function(presetVal, idx) {
-        chips[idx].classList.toggle('selected', presetVal === val);
-      });
-      if (save) savePrefs();
-    }
-
-    function stepParam(key, delta) {
-      updateParam(key, state[key] + delta);
-    }
-
-    function restoreDefaults() {
-      updateParam('base', 15);
-      updateParam('inc', 5);
-      updateParam('count', 4);
-    }
-
-    function openBrewScreen() {
-      document.getElementById('setupScreen').classList.remove('active');
-      document.getElementById('brewScreen').classList.add('active');
-      loadInfusion(0);
-    }
-
-    function openSetupScreen() {
-      pauseTimer();
-      document.getElementById('brewScreen').classList.remove('active');
-      document.getElementById('setupScreen').classList.add('active');
-    }
-
-    function renderInfusionStrip() {
-      const strip = document.getElementById('infusionStrip');
-      strip.innerHTML = '';
-      for (let i = 0; i < state.count; i++) {
-        const sec = state.base + i * state.inc;
-        const tab = document.createElement('div');
-        tab.className = 'inf-tab ' + (i === state.currentIdx ? 'active' : (i < state.currentIdx ? 'done' : ''));
-        tab.onclick = (function(index) {
-          return function() { pauseTimer(); loadInfusion(index); };
-        })(i);
-        tab.innerHTML =
-          '<div class="inf-tab-ord">' + toOrdinal(i + 1) + '</div>' +
-          '<div class="inf-tab-label">Infusion</div>' +
-          '<div class="inf-tab-divider"></div>' +
-          '<div class="inf-tab-time">' + formatCardTime(sec) + '</div>';
-        strip.appendChild(tab);
-      }
-      const activeEl = strip.children[state.currentIdx];
-      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-
-    function setGaiwanOpen(isOpen) {
-      document.getElementById('gaiwanStage').classList.toggle('open', isOpen);
-    }
-
-    function loadInfusion(idx) {
-      state.currentIdx = idx;
-      state.totalSec = state.base + idx * state.inc;
-      state.remainingMs = state.totalSec * 1000;
-      state.steepFinished = false;
-
-      setGaiwanOpen(false);
-      updateVisuals();
-      renderInfusionStrip();
-
-      const ord = toOrdinal(idx + 1);
-      document.getElementById('countdownStatus').textContent = ord + ' Infusion Ready';
-      const btn = document.getElementById('mainActionBtn');
-      btn.textContent = '▶ Start ' + ord;
-      btn.classList.add('primary');
-    }
-
-    function updateVisuals() {
-      document.getElementById('countdownNum').textContent = formatBigClock(state.remainingMs);
-      const progress = 1 - Math.max(0, Math.min(1, state.remainingMs / (state.totalSec * 1000)));
-      // Moves the sloshing wave group smoothly from y=192 (bottom of cup) up to y=104 (top rim)
-      const waveY = 192 - (progress * 88);
-      document.getElementById('waterLevelGroup').setAttribute('transform', 'translate(0, ' + waveY + ')');
-    }
-
-    function handleMainAction() {
-      if (state.steepFinished) {
-        if (state.currentIdx + 1 < state.count) {
-          loadInfusion(state.currentIdx + 1);
-          startTimer();
-        } else {
-          restartCeremony();
-        }
-        return;
-      }
-      state.running ? pauseTimer() : startTimer();
-    }
-
-    async function requestWakeLock() {
-      if ('wakeLock' in navigator) {
-        try { state.wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
-      }
-    }
-
-    function startTimer() {
-      if (state.remainingMs <= 0) state.remainingMs = state.totalSec * 1000;
-      state.running = true;
-      state.steepFinished = false;
-      setGaiwanOpen(false);
-      state.endTime = performance.now() + state.remainingMs;
-      requestWakeLock();
-
-      const btn = document.getElementById('mainActionBtn');
-      btn.textContent = '❚❚ Pause';
-      btn.classList.remove('primary');
-      document.getElementById('countdownStatus').textContent = 'Steeping ' + toOrdinal(state.currentIdx + 1) + ' Infusion...';
-
-      function tick(now) {
-        if (!state.running) return;
-        state.remainingMs = Math.max(0, state.endTime - now);
-        updateVisuals();
-
-        if (state.remainingMs <= 0) {
-          completeSteep();
-        } else {
-          state.rafId = requestAnimationFrame(tick);
-        }
-      }
-      state.rafId = requestAnimationFrame(tick);
-    }
-
-    function pauseTimer() {
-      state.running = false;
-      cancelAnimationFrame(state.rafId);
-      if (state.wakeLock) { state.wakeLock.release().catch(function(){}); state.wakeLock = null; }
-      if (!state.steepFinished) {
-        const btn = document.getElementById('mainActionBtn');
-        btn.textContent = '▶ Resume';
-        btn.classList.add('primary');
-        document.getElementById('countdownStatus').textContent = 'Paused';
-      }
-    }
-
-    function adjustLiveTime(deltaSec) {
-      if (state.steepFinished) return;
-      const deltaMs = deltaSec * 1000;
-      state.totalSec = Math.max(1, state.totalSec + deltaSec);
-      state.remainingMs = Math.max(1000, state.remainingMs + deltaMs);
-      if (state.running) state.endTime += deltaMs;
-      updateVisuals();
-    }
-
-    function playZenBell() {
-      if (!state.sound) return;
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        [528, 792].forEach(function(freq, idx) {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime);
-          gain.gain.setValueAtTime(idx === 0 ? 0.35 : 0.15, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 2.4);
-        });
-      } catch (e) {}
-    }
-
-    function completeSteep() {
-      state.running = false;
-      state.steepFinished = true;
-      state.remainingMs = 0;
-      updateVisuals();
-
-      setGaiwanOpen(true);
-
-      playZenBell();
-      if (navigator.vibrate) navigator.vibrate([250, 120, 350]);
-
-      const btn = document.getElementById('mainActionBtn');
-      btn.classList.add('primary');
-
-      if (state.currentIdx + 1 < state.count) {
-        const nextOrd = toOrdinal(state.currentIdx + 2);
-        document.getElementById('countdownStatus').textContent = toOrdinal(state.currentIdx + 1) + ' Infusion Ready — Pour Tea!';
-        btn.textContent = 'Start ' + nextOrd + ' Infusion →';
-      } else {
-        document.getElementById('countdownStatus').textContent = 'All Infusions Complete 🍵';
-        btn.textContent = '↻ Restart Ceremony';
-      }
-    }
-
-    function restartCeremony() {
-      pauseTimer();
-      loadInfusion(0);
-    }
-
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute('data-theme');
-      setTheme(current === 'dark' ? 'light' : 'dark');
-      savePrefs();
-    }
-
-    function setTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      document.getElementById('themeToggleBtn').textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
-    }
-
-    function toggleSound() {
-      state.sound = !state.sound;
-      document.getElementById('soundToggleBtn').textContent = state.sound ? '🔔 Sound' : '🔕 Mute';
-      savePrefs();
-    }
-  </script>
-</body>
-</html>
+          
