@@ -555,5 +555,99 @@
             <input type="range" id="countSlider" min="1" max="20" value="4" oninput="updateParam('count', this.value)">
             <button class="step-btn" onclick="stepParam('count', 1)">+</button>
           </div>
+          <div class="chip-grid" id="countChips">
+            <button class="chip" onclick="updateParam('count', 3)">3</button>
+            <button class="chip selected" onclick="updateParam('count', 4)">4</button>
+            <button class="chip" onclick="updateParam('count', 5)">5</button>
+            <button class="chip" onclick="updateParam('count', 8)">8</button>
+            <button class="chip" onclick="updateParam('count', 10)">10</button>
+          </div>
+        </div>
+      </div>
 
-          
+      <div class="setup-footer">
+        <button class="text-link" onclick="restoreDefaults()">Restore defaults</button>
+        <button class="primary-btn" onclick="openBrewScreen()">Proceed to brewing</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: BREWING TIMER -->
+    <div id="brewScreen" class="screen">
+      <div>
+        <div class="infusion-strip" id="infusionStrip"></div>
+        <div class="sub-actions">
+          <button class="sub-btn" onclick="restartCeremony()">↻ Restart ceremony</button>
+          <button class="sub-btn" onclick="openSetupScreen()">⚙ Settings</button>
+        </div>
+      </div>
+
+      <div class="ceremony-center">
+        <div class="countdown-num" id="countdownNum">15</div>
+        <div class="countdown-label" id="countdownStatus">1st Infusion Ready</div>
+
+        <div class="gaiwan-stage" id="gaiwanStage">
+          <svg class="gaiwan-svg" viewBox="0 0 280 235">
+            <defs>
+              <radialGradient id="saucerGrad" cx="42%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#9ca39e" />
+                <stop offset="55%" stop-color="#5a605d" />
+                <stop offset="90%" stop-color="#333735" />
+                <stop offset="100%" stop-color="#222523" />
+              </radialGradient>
+              <linearGradient id="stonewareBodyGrad" x1="15%" y1="10%" x2="88%" y2="90%">
+                <stop offset="0%" stop-color="#575b58" />
+                <stop offset="32%" stop-color="#2e3230" />
+                <stop offset="72%" stop-color="#1b1e1c" />
+                <stop offset="100%" stop-color="#121413" />
+              </linearGradient>
+              <radialGradient id="lidDomeGrad" cx="35%" cy="35%" r="68%">
+                <stop offset="0%" stop-color="#878c89" />
+                <stop offset="40%" stop-color="#434745" />
+                <stop offset="75%" stop-color="#2b2323" />
+                <stop offset="100%" stop-color="#161817" />
+              </radialGradient>
+              <linearGradient id="celadonRimGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#b9c2bc" />
+                <stop offset="30%" stop-color="#e3e8e5" />
+                <stop offset="70%" stop-color="#c8d1cb" />
+                <stop offset="100%" stop-color="#8d9690" />
+              </linearGradient>
+              <radialGradient id="teaLiquorGrad" cx="50%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="#6b9e78" stop-opacity="0.92" />
+                <stop offset="65%" stop-color="#467553" stop-opacity="0.96" />
+                <stop offset="100%" stop-color="#284731" stop-opacity="1" />
+              </radialGradient>
+              <clipPath id="bowlOpeningClip">
+                <ellipse cx="140" cy="95" rx="76" ry="23" />
+              </clipPath>
+              <clipPath id="bowlBodyClip">
+                <path d="M 62 96 C 68 148, 86 183, 114 188 Q 140 192, 166 188 C 194 183, 212 148, 218 96 Z" />
+              </clipPath>
+            </defs>
+
+            <ellipse cx="140" cy="184" rx="98" ry="34" fill="url(#saucerGrad)" stroke="#484d4a" stroke-width="1.5" />
+            <ellipse cx="143" cy="186" rx="64" ry="20" fill="#171a18" opacity="0.55" />
+            <ellipse cx="140" cy="184" rx="54" ry="15" fill="none" stroke="#757c78" stroke-width="1" opacity="0.35" />
+
+            <path d="M 62 96 C 68 148, 86 183, 114 188 Q 140 192, 166 188 C 194 183, 212 148, 218 96 Z"
+                  fill="url(#stonewareBodyGrad)" stroke="#2c302e" stroke-width="1.5" />
+
+            <g clip-path="url(#bowlBodyClip)">
+              <g id="waterLevelGroup" transform="translate(0, 192)">
+                <path class="wave-back" d="M 0 0 Q 35 -7 70 0 T 140 0 T 210 0 T 280 0 T 350 0 T 420 0 L 420 130 L 0 130 Z" fill="#527961" opacity="0.32" />
+                <path class="wave-front" d="M 0 2 Q 35 9 70 2 T 140 2 T 210 2 T 280 2 T 350 2 T 420 2 L 420 130 L 0 130 Z" fill="#739e82" opacity="0.45" />
+              </g>
+              <path d="M 74 108 C 78 145, 92 172, 112 182" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.08" />
+            </g>
+
+            <ellipse cx="140" cy="94" rx="84" ry="27" fill="url(#celadonRimGrad)" stroke="#5b635e" stroke-width="1.2" />
+            <ellipse cx="140" cy="95" rx="76" ry="23" fill="#1c211e" />
+
+            <g class="tea-interior-contents" clip-path="url(#bowlOpeningClip)">
+              <ellipse cx="140" cy="98" rx="73" ry="21" fill="url(#teaLiquorGrad)" />
+              <ellipse cx="140" cy="98" rx="60" ry="15" fill="none" stroke="#a3c4ad" stroke-width="0.8" opacity="0.4" />
+              <g class="tea-leaves-group">
+                <path d="M 102 99 Q 116 87 131 96 Q 116 107 102 99 Z" fill="#1b3b28" />
+                <path d="M 104 99 Q 116 94 129 96" fill="none" stroke="#6b9e78" stroke-width="0.9" />
+                <path d="M 135 91 Q 152 83 167 94 Q 150 103 135 91 Z" fill="#274f38" />
+                <path
