@@ -28,17 +28,19 @@ jobs:
           mkdir -p www assets
           cp index.html manifest.json sw.js www/ 2>/dev/null || true
 
-          # Create a proper SVG icon asset for Capacitor to process
+          # Clean, minimalist tea cup & leaf icon asset
           cat << 'EOF' > "assets/icon.svg"
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <rect width="512" height="512" rx="112" fill="#0c0f0d"/>
-            <ellipse cx="256" cy="420" rx="130" ry="30" fill="#5a605d"/>
-            <path d="M122,256c15,112 55,174 134,184c79,-10 119,-72 134,-184z" fill="#2e3230" stroke="#739e82" stroke-width="10"/>
-            <ellipse cx="256" cy="256" rx="134" ry="36" fill="#b9c2bc" stroke="#739e82" stroke-width="8"/>
-            <ellipse cx="256" cy="256" rx="114" ry="26" fill="#1c211e"/>
-            <path d="M164,236c15,-72 55,-92 92,-92s77,20 92,92c-40,40 -144,40 -184,0z" fill="#434745" stroke="#739e82" stroke-width="10"/>
-            <rect x="226" y="92" width="60" height="50" rx="10" fill="#383c3a" stroke="#739e82" stroke-width="6"/>
-            <ellipse cx="256" cy="92" rx="30" ry="13" fill="#9ea6a1"/>
+            <!-- Steam lines -->
+            <path d="M210 160 C200 130, 220 110, 210 90 M256 150 C246 120, 266 100, 256 80 M302 160 C292 130, 312 110, 302 90" fill="none" stroke="#739e82" stroke-width="14" stroke-linecap="round"/>
+            <!-- Tea Cup Body -->
+            <path d="M146 220 C146 330, 166 380, 256 380 C346 380, 366 330, 366 220 Z" fill="#1c211e" stroke="#739e82" stroke-width="16"/>
+            <!-- Tea Surface / Leaf -->
+            <ellipse cx="256" cy="220" rx="110" ry="28" fill="#527961"/>
+            <path d="M256 195 C280 215, 280 240, 256 250 C232 240, 232 215, 256 195 Z" fill="#b9c2bc"/>
+            <!-- Saucer -->
+            <path d="M116 410 C180 430, 332 430, 396 410" fill="none" stroke="#739e82" stroke-width="16" stroke-linecap="round"/>
           </svg>
           EOF
 
@@ -47,8 +49,6 @@ jobs:
 
           echo '{"appId":"com.gongfucha.timer","appName":"Gong Fu Cha","webDir":"www"}' > capacitor.config.json
           npx cap add android
-          
-          # Automatically generate native app icons for Android from our SVG
           npx @capacitor/assets generate --android
 
       - name: Compile Android APK
