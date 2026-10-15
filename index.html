@@ -181,52 +181,20 @@
       font-weight: 700;
     }
 
-    .toggle-row {
+    .checkbox-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 46px;
-      height: 26px;
-    }
-
-    .switch input { opacity: 0; width: 0; height: 0; }
-
-    .slider-toggle {
-      position: absolute;
+      gap: 12px;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: var(--surface-elevated);
-      border: 1px solid var(--border);
-      transition: .2s;
-      border-radius: 26px;
+      padding: 2px 0;
     }
 
-    .slider-toggle:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: var(--muted);
-      transition: .2s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider-toggle {
-      background-color: var(--accent);
-      border-color: var(--accent);
-    }
-
-    input:checked + .slider-toggle:before {
-      transform: translateX(20px);
-      background-color: var(--btn-text);
+    .checkbox-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      border-radius: 6px;
     }
 
     .setup-footer {
@@ -486,28 +454,6 @@
     <div id="setupScreen" class="screen active">
       <div>
         <div class="card">
-          <div class="toggle-row">
-            <span class="card-title">Enable optional rinse step (Wash)</span>
-            <label class="switch">
-              <input type="checkbox" id="rinseToggle" onchange="toggleRinse(this.checked)">
-              <span class="slider-toggle"></span>
-            </label>
-          </div>
-        </div>
-
-        <div class="card" id="rinseCard" style="display: none;">
-          <div class="card-header">
-            <span class="card-title">Rinse duration</span>
-            <span class="card-value" id="rinseVal">5 sec</span>
-          </div>
-          <div class="slider-wrap">
-            <button class="step-btn" onclick="stepRinse(-1)">−</button>
-            <input type="range" id="rinseSlider" min="2" max="30" value="5" oninput="updateRinse(this.value)">
-            <button class="step-btn" onclick="stepRinse(1)">+</button>
-          </div>
-        </div>
-
-        <div class="card">
           <div class="card-header">
             <span class="card-title">First infusion time</span>
             <span class="card-value" id="baseVal">15 sec</span>
@@ -561,6 +507,32 @@
             <button class="chip" onclick="updateParam('count', 5)">5</button>
             <button class="chip" onclick="updateParam('count', 8)">8</button>
             <button class="chip" onclick="updateParam('count', 10)">10</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <label class="checkbox-row">
+            <input type="checkbox" id="rinseToggle" onchange="toggleRinse(this.checked)">
+            <span class="card-title" style="cursor: pointer;">Enable Rinse step</span>
+          </label>
+        </div>
+
+        <div class="card" id="rinseCard" style="display: none;">
+          <div class="card-header">
+            <span class="card-title">Rinse duration</span>
+            <span class="card-value" id="rinseVal">5 sec</span>
+          </div>
+          <div class="slider-wrap">
+            <button class="step-btn" onclick="stepRinse(-1)">−</button>
+            <input type="range" id="rinseSlider" min="2" max="30" value="5" oninput="updateRinse(this.value)">
+            <button class="step-btn" onclick="stepRinse(1)">+</button>
+          </div>
+          <div class="chip-grid" id="rinseChips">
+            <button class="chip selected" onclick="updateRinse(5)">5s</button>
+            <button class="chip" onclick="updateRinse(10)">10s</button>
+            <button class="chip" onclick="updateRinse(15)">15s</button>
+            <button class="chip" onclick="updateRinse(20)">20s</button>
+            <button class="chip" onclick="updateRinse(30)">30s</button>
           </div>
         </div>
       </div>
@@ -650,4 +622,8 @@
                 <path d="M 102 99 Q 116 87 131 96 Q 116 107 102 99 Z" fill="#1b3b28" />
                 <path d="M 104 99 Q 116 94 129 96" fill="none" stroke="#6b9e78" stroke-width="0.9" />
                 <path d="M 135 91 Q 152 83 167 94 Q 150 103 135 91 Z" fill="#274f38" />
-                <path
+                <path d="M 137 91 Q 151 90 164 94" fill="none" stroke="#84b593" stroke-width="0.9" />
+                <path d="M 120 104 Q 139 95 155 106 Q 137 114 120 104 Z" fill="#163021" />
+                <path d="M 122 104 Q 138 102 152 106" fill="none" stroke="#6b9e78" stroke-width="0.9" />
+                <path d="M 154 100 Q 168 93 179 101 Q 166 108 154 100 Z" fill="#356648" />
+                <path d="M 89 9
