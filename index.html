@@ -614,8 +614,7 @@
 
             <ellipse cx="140" cy="94" rx="84" ry="27" fill="url(#celadonRimGrad)" stroke="#5b635e" stroke-width="1.2" />
             <ellipse cx="140" cy="95" rx="76" ry="23" fill="#1c211e" />
-
-            <g class="tea-interior-contents" clip-path="url(#bowlOpeningClip)">
+  <g class="tea-interior-contents" clip-path="url(#bowlOpeningClip)">
               <ellipse cx="140" cy="98" rx="73" ry="21" fill="url(#teaLiquorGrad)" />
               <ellipse cx="140" cy="98" rx="60" ry="15" fill="none" stroke="#a3c4ad" stroke-width="0.8" opacity="0.4" />
               <g class="tea-leaves-group">
@@ -626,4 +625,423 @@
                 <path d="M 120 104 Q 139 95 155 106 Q 137 114 120 104 Z" fill="#163021" />
                 <path d="M 122 104 Q 138 102 152 106" fill="none" stroke="#6b9e78" stroke-width="0.9" />
                 <path d="M 154 100 Q 168 93 179 101 Q 166 108 154 100 Z" fill="#356648" />
-                <path d="M 89 9
+                <path d="M 89 95 Q 102 89 112 98 Q 100 104 89 95 Z" fill="#274f38" />
+              </g>
+            </g>
+
+            <path d="M 56 94 A 84 27 0 0 0 224 94" fill="none" stroke="#e3e8e5" stroke-width="2.4" opacity="0.9" />
+
+            <g class="steam-group" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round">
+              <path class="steam-path" d="M 116 82 Q 110 68 118 56 T 114 34" />
+              <path class="steam-path" d="M 140 78 Q 146 64 138 50 T 142 28" />
+              <path class="steam-path" d="M 162 84 Q 168 70 160 58 T 164 38" />
+            </g>
+
+            <g id="gaiwanLidGroup">
+              <ellipse cx="140" cy="95" rx="70" ry="20" fill="#0d0f0e" opacity="0.55" />
+              <path d="M 72 93 C 76 62, 110 52, 140 52 C 170 52, 204 62, 208 93 C 190 112, 90 112, 72 93 Z"
+                    fill="url(#lidDomeGrad)" stroke="#5b635e" stroke-width="1.3" />
+              <path d="M 72 93 C 92 111, 188 111, 208 93" fill="none" stroke="#c8d1cb" stroke-width="1.8" opacity="0.75" />
+              <ellipse cx="142" cy="56" rx="25" ry="9" fill="#0f1210" opacity="0.65" />
+              <path d="M 117 41 L 119 54 C 120 60, 160 60, 161 54 L 163 41 Z"
+                    fill="#383c3a" stroke="#7d8580" stroke-width="1.2" />
+              <path d="M 125 43 L 126 55 M 132 44 L 132 57 M 140 44 L 140 57 M 148 44 L 148 57 M 155 43 L 154 55"
+                    stroke="#222523" stroke-width="1.2" opacity="0.6" />
+              <ellipse cx="140" cy="41" rx="23" ry="8.5" fill="#9ea6a1" stroke="#484d4a" stroke-width="1.2" />
+              <ellipse cx="140" cy="41" rx="17" ry="5.5" fill="#252927" stroke="#c8d1cb" stroke-width="0.8" />
+              <ellipse cx="146" cy="42" rx="4.5" ry="1.6" fill="#dce3de" opacity="0.65" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="timer-controls">
+        <button class="mini-ctrl" onclick="adjustLiveTime(-5)">−5s</button>
+        <button class="main-btn primary" id="mainActionBtn" onclick="handleMainAction()">▶ Start</button>
+        <button class="mini-ctrl" onclick="adjustLiveTime(5)">+5s</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chipMap = {
+      base: [5, 10, 15, 30, 60],
+      inc: [5, 10, 15, 30, 60],
+      count: [3, 4, 5, 8, 10]
+    };
+
+    let state = {
+      base: 15,
+      inc: 5,
+      count: 4,
+      rinseEnabled: false,
+      rinseSec: 5,
+      currentIdx: 0,
+      totalSec: 15,
+      remainingMs: 15000,
+      running: false,
+      steepFinished: false,
+      endTime: null,
+      rafId: null,
+      sound: true,
+      wakeLock: null
+    };
+
+    const rinseChipValues = [5, 10, 15, 20, 30];
+
+    function toOrdinal(n) {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const saved = JSON.parse(localStorage.getItem('gongfu_sage_v7') || '{}');
+      updateParam('base', saved.base || 15, false);
+      updateParam('inc', saved.inc !== undefined ? saved.inc : 5, false);
+      updateParam('count', saved.count || 4, false);
+      if (saved.rinseEnabled !== undefined) {
+        state.rinseEnabled = saved.rinseEnabled;
+        document.getElementById('rinseToggle').checked = state.rinseEnabled;
+        document.getElementById('rinseCard').style.display = state.rinseEnabled ? 'block' : 'none';
+      }
+      if (saved.rinseSec) {
+        state.rinseSec = saved.rinseSec;
+        document.getElementById('rinseSlider').value = state.rinseSec;
+        document.getElementById('rinseVal').textContent = state.rinseSec + ' sec';
+        updateRinseChipsUI();
+      }
+      if (saved.theme) setTheme(saved.theme);
+      if (saved.sound !== undefined) {
+        state.sound = saved.sound;
+        document.getElementById('soundToggleBtn').textContent = state.sound ? '🔔 Sound' : '🔕 Mute';
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      }
+    });
+
+    function savePrefs() {
+      localStorage.setItem('gongfu_sage_v7', JSON.stringify({
+        base: state.base,
+        inc: state.inc,
+        count: state.count,
+        rinseEnabled: state.rinseEnabled,
+        rinseSec: state.rinseSec,
+        theme: document.documentElement.getAttribute('data-theme'),
+        sound: state.sound
+      }));
+    }
+
+    function toggleRinse(enabled) {
+      state.rinseEnabled = enabled;
+      document.getElementById('rinseCard').style.display = enabled ? 'block' : 'none';
+      savePrefs();
+    }
+
+    function updateRinse(val, save) {
+      if (save === undefined) save = true;
+      state.rinseSec = Math.max(2, parseInt(val, 10));
+      document.getElementById('rinseSlider').value = state.rinseSec;
+      document.getElementById('rinseVal').textContent = state.rinseSec + ' sec';
+      updateRinseChipsUI();
+      if (save) savePrefs();
+    }
+
+    function updateRinseChipsUI() {
+      const chips = document.getElementById('rinseChips').children;
+      rinseChipValues.forEach(function(presetVal, idx) {
+        chips[idx].classList.toggle('selected', presetVal === state.rinseSec);
+      });
+    }
+
+    function stepRinse(delta) {
+      updateRinse(state.rinseSec + delta);
+    }
+
+    function formatCardTime(sec) {
+      if (sec < 60) return sec + 's';
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return s > 0 ? (m + 'm ' + s + 's') : (m + 'm');
+    }
+
+    function formatBigClock(ms) {
+      const sec = Math.ceil(ms / 1000);
+      if (sec < 60) return String(sec);
+      const m = Math.floor(sec / 60), s = String(sec % 60).padStart(2, '0');
+      return m + ':' + s;
+    }
+
+    function updateParam(key, val, save) {
+      if (save === undefined) save = true;
+      val = Math.max(key === 'inc' ? 0 : 1, parseInt(val, 10));
+      state[key] = val;
+      document.getElementById(key + 'Slider').value = val;
+
+      if (key === 'base') document.getElementById('baseVal').textContent = val >= 60 ? formatCardTime(val) : (val + ' sec');
+      if (key === 'inc') document.getElementById('incVal').textContent = '+' + (val >= 60 ? formatCardTime(val) : (val + ' sec'));
+      if (key === 'count') document.getElementById('countVal').textContent = String(val);
+
+      const chips = document.getElementById(key + 'Chips').children;
+      chipMap[key].forEach(function(presetVal, idx) {
+        chips[idx].classList.toggle('selected', presetVal === val);
+      });
+      if (save) savePrefs();
+    }
+
+    function stepParam(key, delta) {
+      updateParam(key, state[key] + delta);
+    }
+
+    function restoreDefaults() {
+      updateParam('base', 15);
+      updateParam('inc', 5);
+      updateParam('count', 4);
+      state.rinseEnabled = false;
+      state.rinseSec = 5;
+      document.getElementById('rinseToggle').checked = false;
+      document.getElementById('rinseCard').style.display = 'none';
+      updateRinse(5);
+      savePrefs();
+    }
+
+    function openBrewScreen() {
+      document.getElementById('setupScreen').classList.remove('active');
+      document.getElementById('brewScreen').classList.add('active');
+      loadInfusion(0);
+    }
+
+    function openSetupScreen() {
+      pauseTimer();
+      document.getElementById('brewScreen').classList.remove('active');
+      document.getElementById('setupScreen').classList.add('active');
+    }
+
+    function getTotalSteps() {
+      return state.count + (state.rinseEnabled ? 1 : 0);
+    }
+
+    function renderInfusionStrip() {
+      const strip = document.getElementById('infusionStrip');
+      strip.innerHTML = '';
+      const total = getTotalSteps();
+
+      for (let i = 0; i < total; i++) {
+        const tab = document.createElement('div');
+        tab.className = 'inf-tab ' + (i === state.currentIdx ? 'active' : (i < state.currentIdx ? 'done' : ''));
+        tab.onclick = (function(index) {
+          return function() { pauseTimer(); loadInfusion(index); };
+        })(i);
+
+        if (state.rinseEnabled && i === total - 1) {
+          tab.innerHTML =
+            '<div class="inf-tab-ord">Rinse</div>' +
+            '<div class="inf-tab-label">Step</div>' +
+            '<div class="inf-tab-divider"></div>' +
+            '<div class="inf-tab-time">' + formatCardTime(state.rinseSec) + '</div>';
+        } else {
+          const infusionNum = i + 1;
+          const sec = state.base + (infusionNum - 1) * state.inc;
+          tab.innerHTML =
+            '<div class="inf-tab-ord">' + toOrdinal(infusionNum) + '</div>' +
+            '<div class="inf-tab-label">Infusion</div>' +
+            '<div class="inf-tab-divider"></div>' +
+            '<div class="inf-tab-time">' + formatCardTime(sec) + '</div>';
+        }
+        strip.appendChild(tab);
+        }
+      const activeEl = strip.children[state.currentIdx];
+      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+
+    function setGaiwanOpen(isOpen) {
+      document.getElementById('gaiwanStage').classList.toggle('open', isOpen);
+    }
+
+    function loadInfusion(idx) {
+      state.currentIdx = idx;
+      const total = getTotalSteps();
+      const isRinseStep = state.rinseEnabled && idx === total - 1;
+
+      if (isRinseStep) {
+        state.totalSec = state.rinseSec;
+      } else {
+        const infusionNum = idx + 1;
+        state.totalSec = state.base + (infusionNum - 1) * state.inc;
+      }
+      state.remainingMs = state.totalSec * 1000;
+      state.steepFinished = false;
+
+      setGaiwanOpen(false);
+      updateVisuals();
+      renderInfusionStrip();
+
+      const btn = document.getElementById('mainActionBtn');
+      btn.classList.add('primary');
+
+      if (isRinseStep) {
+        document.getElementById('countdownStatus').textContent = 'Rinse Step Ready';
+        btn.textContent = '▶ Start Rinse';
+      } else {
+        const infusionNum = idx + 1;
+        const ord = toOrdinal(infusionNum);
+        document.getElementById('countdownStatus').textContent = ord + ' Infusion Ready';
+        btn.textContent = '▶ Start ' + ord;
+      }
+    }
+
+    function updateVisuals() {
+      document.getElementById('countdownNum').textContent = formatBigClock(state.remainingMs);
+      const progress = 1 - Math.max(0, Math.min(1, state.remainingMs / (state.totalSec * 1000)));
+      const waveY = 192 - (progress * 88);
+      document.getElementById('waterLevelGroup').setAttribute('transform', 'translate(0, ' + waveY + ')');
+    }
+
+    function handleMainAction() {
+      if (state.steepFinished) {
+        if (state.currentIdx + 1 < getTotalSteps()) {
+          loadInfusion(state.currentIdx + 1);
+          startTimer();
+        } else {
+          restartCeremony();
+        }
+        return;
+      }
+      state.running ? pauseTimer() : startTimer();
+    }
+
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try { state.wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+      }
+    }
+
+    function startTimer() {
+      if (state.remainingMs <= 0) state.remainingMs = state.totalSec * 1000;
+      state.running = true;
+      state.steepFinished = false;
+      setGaiwanOpen(false);
+      state.endTime = performance.now() + state.remainingMs;
+      requestWakeLock();
+
+      const btn = document.getElementById('mainActionBtn');
+      btn.textContent = '❚❚ Pause';
+      btn.classList.remove('primary');
+
+      const total = getTotalSteps();
+      if (state.rinseEnabled && state.currentIdx === total - 1) {
+        document.getElementById('countdownStatus').textContent = 'Rinsing...';
+      } else {
+        const infusionNum = state.currentIdx + 1;
+        document.getElementById('countdownStatus').textContent = 'Steeping ' + toOrdinal(infusionNum) + ' Infusion...';
+      }
+
+      function tick(now) {
+        if (!state.running) return;
+        state.remainingMs = Math.max(0, state.endTime - now);
+        updateVisuals();
+
+        if (state.remainingMs <= 0) {
+          completeSteep();
+        } else {
+          state.rafId = requestAnimationFrame(tick);
+        }
+      }
+      state.rafId = requestAnimationFrame(tick);
+    }
+
+    function pauseTimer() {
+      state.running = false;
+      cancelAnimationFrame(state.rafId);
+      if (state.wakeLock) { state.wakeLock.release().catch(function(){}); state.wakeLock = null; }
+      if (!state.steepFinished) {
+        const btn = document.getElementById('mainActionBtn');
+        btn.textContent = '▶ Resume';
+        btn.classList.add('primary');
+        document.getElementById('countdownStatus').textContent = 'Paused';
+      }
+    }
+
+    function adjustLiveTime(deltaSec) {
+      if (state.steepFinished) return;
+      const deltaMs = deltaSec * 1000;
+      state.totalSec = Math.max(1, state.totalSec + deltaSec);
+      state.remainingMs = Math.max(1000, state.remainingMs + deltaMs);
+      if (state.running) state.endTime += deltaMs;
+      updateVisuals();
+    }
+
+    function playZenBell() {
+      if (!state.sound) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [528, 792].forEach(function(freq, idx) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(idx === 0 ? 0.35 : 0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 2.4);
+        });
+      } catch (e) {}
+    }
+
+    function completeSteep() {
+      state.running = false;
+      state.steepFinished = true;
+      state.remainingMs = 0;
+      updateVisuals();
+
+      setGaiwanOpen(true);
+
+      playZenBell();
+      if (navigator.vibrate) navigator.vibrate([250, 120, 350]);
+
+      const btn = document.getElementById('mainActionBtn');
+      btn.classList.add('primary');
+
+      const total = getTotalSteps();
+      if (state.currentIdx + 1 < total) {
+        const nextInfusionNum = state.currentIdx + 2;
+        const nextOrd = toOrdinal(nextInfusionNum);
+        const currInfusionNum = state.currentIdx + 1;
+        document.getElementById('countdownStatus').textContent = toOrdinal(currInfusionNum) + ' Infusion Ready — Pour Tea!';
+        btn.textContent = 'Start ' + nextOrd + ' Infusion →';
+      } else {
+        if (state.rinseEnabled && state.currentIdx === total - 1) {
+          document.getElementById('countdownStatus').textContent = 'Rinse Complete 🍵';
+        } else {
+          document.getElementById('countdownStatus').textContent = 'All Infusions Complete 🍵';
+        }
+        btn.textContent = '↻ Restart Ceremony';
+      }
+    }
+
+    function restartCeremony() {
+      pauseTimer();
+      loadInfusion(0);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+      savePrefs();
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeToggleBtn').textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    }
+
+    function toggleSound() {
+      state.sound = !state.sound;
+      document.getElementById('soundToggleBtn').textContent = state.sound ? '🔔 Sound' : '🔕 Mute';
+      savePrefs();
+    }
+  </script>
+</body>
+</html>
